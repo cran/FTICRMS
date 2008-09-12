@@ -9,6 +9,7 @@ and fills in missing values.
 run.cluster.matrix(pre.align = FALSE, align.method = "spline", 
                    trans.method = "shiftedlog", add.par = 10,
                    lrg.only = TRUE, masses = NULL, isotope.dist = 7,
+                   cluster.method = "ppm", cluster.constant = 10, 
                    root.dir = ".", base.dir, peak.dir, lrg.dir, 
                    lrg.file = "lrg.peaks.RData", overwrite = FALSE,
                    use.par.file = FALSE, par.file = "parameters.RData")
@@ -26,6 +27,8 @@ run.cluster.matrix(pre.align = FALSE, align.method = "spline",
       identified by \code{run.lrg.peaks}}
   \item{masses}{numeric vector of specific masses to test}
   \item{isotope.dist}{maximum number of isotope peaks to look at (in addition to main peak)}
+  \item{cluster.method}{one of \code{"ppm"}, \code{"constant"}, or \code{"usewidth"}; see \code{Notes} below}
+  \item{cluster.constant}{parameter used in running \code{cluster.method}}
   \item{root.dir}{string containing location of raw data directory}
   \item{base.dir}{directory for baseline-corrected files; default is \code{paste(root.dir, "/Baseline_Corrected", sep = "")}}
   \item{peak.dir}{directory for peak location files; default is \code{paste(root.dir, "/All_Peaks", sep = "")}}
@@ -69,6 +72,14 @@ The matching is done (depending on the number of non-missing values in row \code
 simple shift (one non-missing value), an affine transformation (two non-missing values), a 
 piecewise affine transformation (three non-missing values), or an interpolation spline (four 
 or more non-missing values).
+
+Suppose \code{cluster.constant = K} and we have two peaks in different spectra with 
+masses \eqn{m_1} and \eqn{m_2}.  If \code{cluster.method = "constant"}, then the peaks 
+are considered to be the same peak if we have \eqn{m_2-m_1 < K}.  If 
+\code{cluster.method = "ppm"}, then the peaks are considered to be the same peak if we 
+have \eqn{m_2-m_1 < K*m_2/10^6}.  If \code{cluster.method = "usewidth"}, then the algorithm
+uses the observation that \code{log(Width_hat)} and \code{log(Center_hat)} appear to be 
+linearly related.  Tolerances are then computed using this relationship. 
 }
 \seealso{\code{\link{run.lrg.peaks}}, \code{\link{run.strong.peaks}}, \code{\link[splines]{interpSpline}}}
 \examples{}

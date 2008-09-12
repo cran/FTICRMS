@@ -1,7 +1,7 @@
 `run.baselines` <-
 function(root.dir = ".", raw.dir, base.dir, overwrite=FALSE, use.par.file = FALSE, 
-        par.file = "parameters.RData", sm.fac=10^15, neg.pen=sqrt(pi/2), max.iter=30, 
-        frac.changed=0.001, binsize=64){
+        par.file = "parameters.RData", sm.par=1.1E-9, neg.pen=sqrt(pi/2), k.biweight=6, 
+        max.iter=30, frac.changed=0.001){
     fail <- 0
     if(missing(base.dir)){base.dir <- paste(root.dir, "/Baseline_Corrected", sep="")}
     if(missing(raw.dir)){raw.dir <- paste(root.dir, "/Raw_Data", sep="")}
@@ -19,8 +19,8 @@ function(root.dir = ".", raw.dir, base.dir, overwrite=FALSE, use.par.file = FALS
             } else {
                 peak.base <- read.table(paste(raw.dir, "/", i, sep=""), header=FALSE)
             }
-            peak.base[,2] <- peak.base[,2] - baseline(peak.base[,2], sm.fac, 
-                neg.pen, max.iter, frac.changed, binsize)[[1]]
+            peak.base[,2] <- peak.base[,2] - baseline(peak.base[,2], sm.par, 
+                neg.pen, k.biweight, max.iter, frac.changed)[[1]]
             names(peak.base) <- c("Freq", "Amp")
             save(peak.base, file=sub("\\.txt$",".RData", paste(base.dir, "/", i, sep="")))
             rm(peak.base)

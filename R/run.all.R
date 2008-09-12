@@ -1,5 +1,5 @@
 `run.all` <-
-function(root.dir = ".", par.file = "parameters.RData"){
+function(par.file = "parameters.RData", root.dir = "."){
     run.baselines(root.dir=root.dir, par.file=par.file, use.par.file=TRUE)
     run.peaks(root.dir=root.dir, par.file=par.file, use.par.file=TRUE)
     run.lrg.peaks(root.dir=root.dir, par.file=par.file, use.par.file=TRUE)

@@ -1,8 +1,9 @@
 `run.cluster.matrix` <-
 function(pre.align = FALSE, align.method = "spline", trans.method="shiftedlog", 
-        add.par = 10, lrg.only = TRUE, masses = NULL, isotope.dist = 7, 
-        root.dir = ".", base.dir, peak.dir, lrg.dir, lrg.file = "lrg.peaks.RData", 
-        overwrite = FALSE, use.par.file = FALSE, par.file = "parameters.RData"){
+        add.par = 10, lrg.only = TRUE, masses = NULL, isotope.dist = 7,
+        cluster.method = "ppm", cluster.constant = 10, root.dir = ".", base.dir, 
+        peak.dir, lrg.dir, lrg.file = "lrg.peaks.RData", overwrite = FALSE, 
+        use.par.file = FALSE, par.file = "parameters.RData"){
     if(missing(base.dir)){base.dir <- paste(root.dir, "/Baseline_Corrected", sep="")}
     if(missing(peak.dir)){peak.dir <- paste(root.dir, "/All_Peaks", sep="")}
     if(missing(lrg.dir)){lrg.dir <- paste(root.dir, "/Large_Peaks", sep="")}
@@ -18,7 +19,7 @@ function(pre.align = FALSE, align.method = "spline", trans.method="shiftedlog",
             align.method <- "none"
             warning("Parameter 'align.method' changed to 'none' because no peaks appeared in all samples")
             if(use.par.file){
-                tmp <- extract.pars(root.dir, par.file)
+                tmp <- extract.pars(par.file, root.dir)
                 tmp$align.method <- "none"
                 do.call(make.par.file, tmp)
                 load(paste(root.dir, "/", par.file, sep=""))
@@ -28,7 +29,7 @@ function(pre.align = FALSE, align.method = "spline", trans.method="shiftedlog",
             if(!identical(class(pre.align),"list")){
                 pre.align <- list(targets=0, actual=data.frame(-pre.align))
                 if(use.par.file){
-                    tmp <- extract.pars(root.dir, par.file)
+                    tmp <- extract.pars(par.file, root.dir)
                     tmp$pre.align <- pre.align
                     do.call(make.par.file, tmp)
                     load(paste(root.dir, "/", par.file, sep=""))
@@ -48,7 +49,7 @@ function(pre.align = FALSE, align.method = "spline", trans.method="shiftedlog",
             }
         }
 
-        peaks.clustered <- .cluster.peaks(lrg.peaks)
+        peaks.clustered <- .cluster.peaks(lrg.peaks, clust.method, clust.constant)
         peaks.clustered <- .break.dups(peaks.clustered)
         clust.mat <- .cluster.matrix(peaks.clustered)
         rm(peaks.clustered)

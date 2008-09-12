@@ -1,5 +1,5 @@
-`display.test` <-
-function (sig.rows = "all", tests, summ = anova){
+`display.tests` <-
+function (sig.rows = "all", summ = anova, tests, form = parameter.list$form){
     if (missing(tests)) {
         if (identical(sig.rows, "all")) {
             sig.rows <- 1:dim(sigs)[1]
@@ -11,9 +11,9 @@ function (sig.rows = "all", tests, summ = anova){
         }
     }
     ret <- lapply(tests, function(x) {
-        dat <- data.frame(Y=t(clust.mat[x,,drop=FALSE]), parameter.list$covariates)
+        dat <- data.frame(Y=t(clust.mat[x,,drop=FALSE]), unique(parameter.list$covariates))
         colnames(dat)[1] <- "Y"
-        lm(parameter.list$form, dat)
+        lm(form, dat)
     })
     if(!identical(summ,"none")){
         ret <- lapply(ret, summ)

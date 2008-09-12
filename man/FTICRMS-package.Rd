@@ -10,8 +10,8 @@ and statistically analyzing FT-ICR MS data.}
 \tabular{ll}{
 Package: \tab FTICRMS\cr
 Type: \tab Package\cr
-Version: \tab 0.5\cr
-Date: \tab 2008-05-24\cr
+Version: \tab 0.6\cr
+Date: \tab 2008-09-12\cr
 License: \tab GPL-2 \cr
 }
 This package was developed partially with funding from the NIH Training Program 

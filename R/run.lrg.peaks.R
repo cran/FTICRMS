@@ -1,5 +1,5 @@
 `run.lrg.peaks` <-
-function(numsds = 4, trans.method = "shiftedlog", add.par=10, root.dir = ".", 
+function(k.biweight = 6, trans.method = "shiftedlog", add.par=10, root.dir = ".", 
         peak.dir, base.dir, lrg.dir, lrg.file = "lrg.peaks.RData",
         overwrite = FALSE, use.par.file = FALSE, par.file = "parameters.RData", 
         calc.all.peaks=TRUE){
@@ -23,7 +23,8 @@ function(numsds = 4, trans.method = "shiftedlog", add.par=10, root.dir = ".",
                 if(trans.method=="glog"){
                     peak.base$Amp <- log((peak.base$Amp+sqrt(add.par + peak.base$Amp^2))/2)
                 }
-                threshhold <- mean(peak.base$Amp) + numsds * sd(peak.base$Amp)
+                cent <- .biweight(peak.base$Amp, k.biweight)
+                threshhold <- cent$center + k.biweight * cent$scale
                 rm(peak.base)
             }
             load(paste(peak.dir, "/", i, sep=""))

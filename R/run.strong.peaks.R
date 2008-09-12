@@ -12,7 +12,7 @@ function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, root.dir = ".",
             if(class(pre.align)!="list"){
                 pre.align <- list(targets=0, actual=data.frame(-pre.align))
                 if(use.par.file){
-                    tmp <- extract.pars(root.dir, par.file)
+                    tmp <- extract.pars(par.file, root.dir)
                     tmp$pre.align <- pre.align
                     do.call(make.par.file, tmp)
                     load(paste(root.dir, "/", par.file, sep=""))

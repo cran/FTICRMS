@@ -34,6 +34,27 @@ function(pvals, FDR=.1){
     max(c(0,which(pvals<=FDR*(1:length(pvals))/length(pvals))))
 }
 
+`.biweight` <- 
+function(x, K=6, max.iter=20){
+    iter <- 0
+    ind.old <- 0
+    ind.new <- 1
+    center.bw <- median(x)
+    scale.bw <- median(abs(x-center.bw))
+    while(!all(ind.old==ind.new) && iter<max.iter){
+        iter <- iter + 1
+        ind.old <- ind.new
+        u <- (x-center.bw)/scale.bw
+        ind.new <- (abs(u) <= K)
+        center.bw <- sum(ind.new * x * (1-(u/K)^2)^2)/sum(ind.new * (1-(u/K)^2)^2)   
+        scale.bw <- median(abs(x-center.bw))
+    }
+    if(iter == max.iter && !all(ind.old==ind.new)){
+        warning(paste("Iteration limit of", max.iter, "reached without convergence."))
+    }
+    list(center = center.bw, scale = scale.bw, iter = iter)
+}
+
 `.break.clusters` <-
 function(clust){
     if(max(table(clust$File))==1){
@@ -88,14 +109,20 @@ function(clust.peaks, filenames=levels(clust.peaks[[1]]$File)){
 }
 
 `.cluster.peaks` <-
-function(peaks){
+function(peaks, clust.method="ppm", clust.constant=10){
     tmp <- peaks
-    mod <- lm(log(Width_hat) ~ log(Center_hat), tmp)
-    diffs <- exp(predict(mod)[-dim(tmp)[1]])*0.01/exp(predict(mod, 
-        data.frame(Center_hat = median(tmp$Center_hat))))
-    diffs <- pmax(diffs, 0.01)
     tmp <- tmp[order(tmp$Center_hat),]
     rownames(tmp) <- 1:dim(tmp)[1]
+    if(clust.method=="constant"){
+        diffs <- clust.constant
+    } else if(clust.method=="ppm"){
+        diffs <- clust.constant*tmp$Center_hat[-1]/10^6
+    } else if(clust.method=="usewidth"){
+        mod <- lm(log(Width_hat) ~ log(Center_hat), tmp)
+        diffs <- exp(predict(mod)[-dim(tmp)[1]])*clust.constant/exp(predict(mod, 
+            data.frame(Center_hat = median(tmp$Center_hat))))
+        diffs <- pmax(diffs, clust.constant)
+    }
     clust <- cumsum(c(TRUE,diff(tmp$Center_hat) > diffs))
     by(tmp,clust,function(x){x})
 }

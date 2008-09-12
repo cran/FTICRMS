@@ -7,9 +7,10 @@ to control the False Discovery Rate.}
 \usage{
 run.analysis(form, covariates, FDR = 0.1, normalization = "common",
              add.norm = TRUE, repl.method = max, use.t.test = TRUE,
-             lrg.only = TRUE, masses = NULL, isotope.dist = 7, 
-             root.dir = ".", lrg.dir, lrg.file = "lrg.peaks.RData", 
-             res.dir, res.file = "analyzed.RData", overwrite = FALSE,
+             pval.fcn = "default", lrg.only = TRUE, masses = NULL, 
+             isotope.dist = 7, root.dir = ".", lrg.dir, 
+             lrg.file = "lrg.peaks.RData", res.dir, 
+             res.file = "analyzed.RData", overwrite = FALSE,
              use.par.file = FALSE, par.file = "parameters.RData", 
              \dots)
 }
@@ -21,7 +22,8 @@ run.analysis(form, covariates, FDR = 0.1, normalization = "common",
       \code{"postbase"}, \code{"postrepl"}, and \code{"none"} are supported}
   \item{add.norm}{logical; whether to normalize additively or multiplicatively on the log scale}
   \item{repl.method}{function or string representing a function; how to deal with replicates}
-  \item{use.t.test}{logical; whether to use \code{\link{t.test}} or \code{\link{lm}} to test}
+  \item{use.t.test}{logical; whether to use \code{\link{t.test}} to get p-values}
+  \item{pval.fcn}{default value gives p-value of overall F-statistic of test; see below for form to be used for user-defined values}
   \item{lrg.only}{whether to consider only peaks that have at least one peak \dQuote{significant}; i.e.,
       identified by \code{run.lrg.peaks}}
   \item{masses}{numeric vector of specific masses to test}
@@ -35,7 +37,7 @@ run.analysis(form, covariates, FDR = 0.1, normalization = "common",
   \item{use.par.file}{logical; if \code{TRUE}, then parameters are read from 
       \code{par.file} in directory \code{root.dir}}
   \item{par.file}{string containing name of parameters file}
-  \item{\dots}{additional parameters to be passed to \code{\link{t.test}} or \code{\link{lm}}}
+  \item{\dots}{additional parameters to be passed to \code{\link{t.test}} or \code{pval.fcn}}
 }
 \details{Reads in information from file created by \code{\link{run.strong.peaks}} and creates a file named 
 \code{res.file} in \code{res.dir} which contains variables 
@@ -58,7 +60,7 @@ Barkauskas, D.A. \emph{et al}. (2008) \dQuote{Detecting glycan cancer biomarkers
 samples using MALDI FT-ICR mass spectrometry data}.  Submitted to \emph{Bioinformatics}
 
 Benjamini, Y. and Hochberg, Y.  (1995) \dQuote{Controlling the false discovery rate: a practical and powerful 
-approach to multiple testing.}  \emph{J. Roy. Statist. Soc. Ser. B} \bold{57}, no. 1, 289--300.
+approach to multiple testing.}  \emph{J. Roy. Statist. Soc. Ser. B}, \bold{57}:1, 289--300.
 }
 \author{Don Barkauskas (\email{barkda@wald.ucdavis.edu})}
 \note{If \code{use.par.file = TRUE}, then the parameters read in from the file overwrite any arguments entered in the
@@ -74,6 +76,8 @@ all peaks heights in each spectrum by the average of of all peak heights in that
 then does \code{"postbase"}.
 
 If \code{masses} is not \code{NULL}, then the listed masses plus anything that could be in the first six isotope peaks
-of each mass are tested.}
+of each mass are tested.
+
+If something other than the p-value for the overall F-statistic is needed, then the user-defined function for \code{pval.fcn} should have the form \code{function(form, dat, ...)}, where \code{form} and \code{dat} are as in \code{\link{lm}}; and should have a return value of the desired p-value.}
 \seealso{\code{\link{run.strong.peaks}}}
 \examples{}
