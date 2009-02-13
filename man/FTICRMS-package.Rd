@@ -4,14 +4,14 @@
 \docType{package}
 \title{
 Fourier Transform-Ion Cyclotron Resonance Mass Spectrometry (FT-ICR MS) Analysis}
-\description{Contains programs for calculating baseline curves, identifying peaks, 
-and statistically analyzing FT-ICR MS data.}
+\description{Contains programs for identifying baseline curves and peaks
+and for statistical analysis of FT-ICR MS data.}
 \details{
 \tabular{ll}{
 Package: \tab FTICRMS\cr
 Type: \tab Package\cr
-Version: \tab 0.6\cr
-Date: \tab 2008-09-12\cr
+Version: \tab 0.7\cr
+Date: \tab 2009-02-13\cr
 License: \tab GPL-2 \cr
 }
 This package was developed partially with funding from the NIH Training Program 

@@ -1,41 +1,57 @@
 \name{run.baselines}
 \alias{run.baselines}
-\title{Create Baseline-Corrected Spectra for FT-ICR MS}
+\title{Calculate Baselines for FT-ICR spectra}
 \description{
-Takes the spectra from files in \code{raw.dir}, calculates and subtracts the baselines from them, 
+Takes the spectra from files in \code{raw.dir}, calculates the baselines from them,
 and writes the results in the directory \code{base.dir}.}
 \usage{
-run.baselines(root.dir = ".", raw.dir, base.dir, overwrite = FALSE, 
-              use.par.file = FALSE, par.file = "parameters.RData", 
-              sm.par = 1.1E-9, neg.pen = sqrt(pi/2), k.biweight = 6,
-              max.iter = 30, frac.changed = 0.001)
+run.baselines(root.dir = ".", raw.dir, base.dir, overwrite = FALSE,
+              use.par.file = FALSE, par.file = "parameters.RData",
+              sm.par = 1e-11, sm.ord = 2, max.iter = 40, tol = 5e-8,
+              sm.div = NA, sm.norm.by = c("baseline", "overestimate", "constant"),
+              neg.div = NA, neg.norm.by = c("baseline", "overestimate", "constant"),
+              rel.conv.crit = TRUE, zero.rm = TRUE, halve.search = FALSE)
 }
 \arguments{
-  \item{root.dir}{string containing location of raw data directory}
-  \item{raw.dir}{directory for raw data files; default is \code{paste(root.dir, "/Raw_Data", sep = "")}}
-  \item{base.dir}{directory for baseline-corrected files; default is \code{paste(root.dir, "/Baseline_Corrected", sep = "")}}
-  \item{overwrite}{logical; whether to replace existing files with new ones}
-  \item{use.par.file}{logical; if \code{TRUE}, then parameters are read from 
-      \code{par.file} in directory \code{root.dir}}
-  \item{par.file}{string containing name of parameters file}
-  \item{sm.par}{smoothing parameter for baseline calculation}
-  \item{neg.pen}{negativity penalty in baseline calculation}
-  \item{k.biweight}{parameter for robust center and scale estimation using Tukey's biweight}
-  \item{max.iter}{convergence criterion in baseline calculation}
-  \item{frac.changed}{convergence criterion in baseline calculation}
+    \item{root.dir}{directory for parameters file and raw data}
+    \item{raw.dir}{directory for raw data files; default is \code{paste(root.dir, "/Raw_Data", sep = "")}}
+    \item{base.dir}{directory for baseline files; default is \code{paste(root.dir, "/Baselines", sep = "")}}
+    \item{overwrite}{whether to replace exisiting files with new ones}
+    \item{use.par.file}{logical; if \code{TRUE}, then parameters are read from \code{par.file} in directory \code{root.dir}}
+    \item{par.file}{string containing name of parameters file}
+    \item{sm.par}{smoothing parameter for baseline calculation}
+    \item{sm.ord}{order of derivative to kill in baseline analysis}
+    \item{max.iter}{convergence criterion in baseline calculation}
+    \item{tol}{convergence criterion; see below}
+    \item{sm.div}{smoothness divisor in baseline calculation}
+    \item{sm.norm.by}{method for smoothness penalty in baseline analysis}
+    \item{neg.div}{negativity divisor in baseline calculation}
+    \item{neg.norm.by}{method for negativity penalty in baseline analysis}
+    \item{rel.conv.crit}{logical; whether convergence criterion should be relatiev to current baseline estimate}
+    \item{zero.rm}{logical; whether to replace zeros with average of surrounding values}
+    \item{halve.search}{logical; whether to use a halving-line search if step leads to smaller value of function}
 }
-\details{Goes through the entire directory \code{raw.dir} file-by-file and computes each baseline using \code{\link{baseline}}, 
-subtracts the baseline from the spectrum, and writes the resulting data frame to a file in directory \code{base.dir}.  
-The name of the new file is the same as the name of the old file with \dQuote{.txt} replaced by \dQuote{.RData}, and the 
-new file is ready to be used by \code{\link{run.peaks}}.}
+\details{Goes through the entire directory \code{raw.dir} file-by-file and computes each
+baseline using \code{\link{baseline}}, then writes the spectrum and the baseline to a file
+in directory \code{base.dir}.  The name of the new file is the same as the name of the old
+file with \dQuote{.txt} replaced by \dQuote{.RData}, and the new file is ready to be used
+by \code{\link{run.peaks}}.
+
+See \code{\link{baseline}} for descriptions of all the parameters after \code{par.file}.
+}
 \value{
 No value returned; the files are simply created.
 }
 \references{
-Barkauskas, D.A. \emph{et al}. (2008) \dQuote{Detecting glycan cancer biomarkers in serum 
-samples using MALDI FT-ICR mass spectrometry data}.  Submitted to \emph{Bioinformatics}
+Barkauskas, D.A. (2009) \dQuote{Statistical Analysis of Matrix-Assisted Laser Desorption/Ionization
+Fourier Transform Ion Cyclotron Resonance Mass Spectrometry Data with Applications to Cancer
+Biomarker Detection}.  Ph.D. dissertation, University of California at Davis.
 
-Xi, Y. and Rocke, D.M. (2008) \dQuote{Baseline Correction for NMR Spectroscopic Metabolomics Data Analysis}.  \emph{BMC Bioinformatics}, \bold{9}:324.
+Barkauskas, D.A. \emph{et al}. (2009) \dQuote{Detecting glycan cancer biomarkers in serum
+samples using MALDI FT-ICR mass spectrometry data}.  \emph{Bioinformatics}, \bold{25}:2, 251--257.
+
+Xi, Y. and Rocke, D.M. (2008) \dQuote{Baseline Correction for NMR Spectroscopic Metabolomics Data Analysis}.
+\emph{BMC Bioinformatics}, \bold{9}:324.
 }
 \author{Don Barkauskas (\email{barkda@wald.ucdavis.edu})}
 \note{If \code{use.par.file = TRUE}, then the parameters read in from the file overwrite any arguments entered in the

@@ -1,10 +1,12 @@
 `run.peaks` <-
-function(add.par=10, trans.method="shiftedlog", root.dir=".", base.dir, 
-        peak.dir, overwrite=FALSE, use.par.file=FALSE, par.file = "parameters.RData", 
-        num.pts=5, R2.thresh=0.98, oneside.min=1, peak.method="parabola", 
-        calc.all.peaks=TRUE, numsds=4){
+function(trans.method = "shiftedlog", add.par = 0, subtract.base = FALSE, root.dir = ".",
+        base.dir, peak.dir, overwrite = FALSE, use.par.file = FALSE,
+        par.file = "parameters.RData", num.pts = 5, R2.thresh = 0.98, oneside.min = 1,
+        peak.method = "parabola", calc.all.peaks = FALSE, gengamma.quantiles = TRUE,
+        peak.thresh = 3.798194){
     fail <- 0
-    if(missing(base.dir)){base.dir <- paste(root.dir, "/Baseline_Corrected", sep="")}
+    zeros <- 0
+    if(missing(base.dir)){base.dir <- paste(root.dir, "/Baselines", sep="")}
     if(missing(peak.dir)){peak.dir <- paste(root.dir, "/All_Peaks", sep="")}
     if(use.par.file){
         load(paste(root.dir, "/", par.file, sep=""))
@@ -16,42 +18,64 @@ function(add.par=10, trans.method="shiftedlog", root.dir=".", base.dir,
         if(!file.exists(paste(peak.dir, "/", sub("\\.RData$", "_peaks.RData", j), sep="")) || 
                 overwrite){
             load(paste(base.dir, "/", j, sep=""))
-            names(peak.base) <- c("Freq","LogAmp")
+            names(spect) <- c("Freq","LogAmp")
+            if(subtract.base){
+                spect$LogAmp <- spect$LogAmp-spect.base
+            } else if(any(spect$LogAmp == 0)){
+                zeros <- zeros + 1
+                spect$LogAmp[spect$LogAmp == 0] <- min(spect$LogAmp[spect$LogAmp > 0])
+            }
             if(trans.method=="shiftedlog"){
-                peak.base$LogAmp <- log(peak.base$LogAmp+add.par-min(peak.base$LogAmp))
+                if(subtract.base){
+                    add.par <- add.par - min(spect$LogAmp)
+                }
+                spect$LogAmp <- log(spect$LogAmp+add.par)
             }
             if(trans.method=="glog"){
-                peak.base$LogAmp <- log((peak.base$LogAmp+sqrt(add.par + peak.base$LogAmp^2))/2)
+                spect$LogAmp <- log((spect$LogAmp+sqrt(add.par + spect$LogAmp^2))/2)
             }
-            thresh <- ifelse(calc.all.peaks, -Inf, mean(peak.base$LogAmp) + numsds * sd(peak.base$LogAmp))
-            peak.base <- peak.base[order(peak.base$Freq),]
-            numsplit <- (dim(peak.base)[1] %/% 100000) + 1
-            splits <- (1:(numsplit-1)) * floor(dim(peak.base)[1]/numsplit)
-            splits <- apply(cbind(c(1,splits-(num.pts-oneside.min-1)),
-                c(splits+(num.pts-oneside.min-1),dim(peak.base)[1])), 1, list)
-            splits <- lapply(splits, function(x){seq(x[[1]][1],x[[1]][2])})
-            for(i in 1:numsplit){
-                all.peaks.tmp <- locate.peaks(peak.base[splits[[i]],], num.pts, 
-                    R2.thresh, oneside.min, peak.method, thresh)
-                save(all.peaks.tmp, file=paste(peak.dir, "/", sub("\\.RData", 
-                    paste("_peaks", i, ".RData", sep=""), j), sep=""))
-                rm(all.peaks.tmp)
-            }
-            for(i in numsplit:1){
-                load(paste(peak.dir, "/", sub("\\.RData", paste("_peaks", i, ".RData", 
-                    sep=""), j), sep=""))
-                if(i == numsplit){
-                    all.peaks <- all.peaks.tmp
-                } else {
-                    all.peaks <- rbind(all.peaks.tmp,all.peaks)
+            if(calc.all.peaks){
+                thresh <- -Inf
+                spect <- spect[order(spect$Freq),]
+                numsplit <- (dim(spect)[1] %/% 100000) + 1
+                splits <- (1:(numsplit-1)) * floor(dim(spect)[1]/numsplit)
+                splits <- apply(cbind(c(1,splits-(num.pts-oneside.min-1)),
+                    c(splits+(num.pts-oneside.min-1),dim(spect)[1])), 1, list)
+                splits <- lapply(splits, function(x){seq(x[[1]][1],x[[1]][2])})
+                for(i in 1:numsplit){
+                    all.peaks.tmp <- locate.peaks(spect[splits[[i]],], num.pts=num.pts,
+                        R2.thresh=R2.thresh, oneside.min=oneside.min,
+                        peak.method=peak.method, thresh=thresh)
+                    save(all.peaks.tmp, file=paste(peak.dir, "/", sub("\\.RData",
+                        paste("_peaks", i, ".RData", sep=""), j), sep=""))
+                    rm(all.peaks.tmp)
                 }
-                rm(all.peaks.tmp)
-                file.remove(paste(peak.dir, "/", sub("\\.RData", paste("_peaks", i, 
-                    ".RData", sep=""), j), sep=""))
+                for(i in numsplit:1){
+                    load(paste(peak.dir, "/", sub("\\.RData", paste("_peaks", i, ".RData",
+                        sep=""), j), sep=""))
+                    if(i == numsplit){
+                        all.peaks <- all.peaks.tmp
+                    } else {
+                        all.peaks <- rbind(all.peaks.tmp,all.peaks)
+                    }
+                    rm(all.peaks.tmp)
+                    file.remove(paste(peak.dir, "/", sub("\\.RData", paste("_peaks", i,
+                        ".RData", sep=""), j), sep=""))
+                }
+            } else {
+                if(gengamma.quantiles){
+                    thresh <- log(peak.thresh*spect.base)
+                } else {
+                    thresh <- .biweight.FTICRMS(spect$LogAmp, K=3*peak.thresh/2)
+                    thresh <- thresh$center + 3*peak.thresh/2*thresh$scale
+                }
+                all.peaks <- locate.peaks(spect, num.pts=num.pts,
+                        R2.thresh=R2.thresh, oneside.min=oneside.min,
+                        peak.method=peak.method, thresh=thresh)
             }
             all.peaks <- unique(all.peaks)
             rownames(all.peaks) <- 1:dim(all.peaks)[1]
-            save(all.peaks, file=paste(peak.dir, "/", sub("\\.RData$", 
+            save(all.peaks, file=paste(peak.dir, "/", sub("\\.RData$",
                 "_peaks.RData", j), sep=""))
         } else {
             fail <- fail + 1
@@ -59,6 +83,9 @@ function(add.par=10, trans.method="shiftedlog", root.dir=".", base.dir,
     }
     if(fail) {
         warning(paste(fail, "peak file(s) already existed and overwrite = FALSE; those file(s) not updated"))
+    }
+    if(zeros){
+        warning(paste(zeros, ifelse(zeros==1, "spectrum", "spectra"), "had one or more zero entries for amplitude; those entries replaced by minimum value of amplitude"))
     }
 }
 

@@ -1,9 +1,9 @@
 `run.analysis` <-
-function(form, covariates, FDR=0.1, normalization="common", add.norm=TRUE, 
-        repl.method=max, use.t.test = TRUE, pval.fcn = "default", 
-        lrg.only = TRUE, masses = NULL, isotope.dist = 7, root.dir=".", 
-        lrg.dir, lrg.file = "lrg.peaks.RData", res.dir, 
-        res.file = "analyzed.RData", overwrite = FALSE, use.par.file = FALSE, 
+function(form, covariates, FDR = 0.1, normalization = "common", add.norm = TRUE,
+        repl.method = max, use.t.test = FALSE, pval.fcn = "default",
+        lrg.only = TRUE, masses = NULL, isotope.dist = 7, root.dir = ".",
+        lrg.dir, lrg.file = "lrg_peaks.RData", res.dir,
+        res.file = "analyzed.RData", overwrite = FALSE, use.par.file = FALSE,
         par.file = "parameters.RData", ...){
     if(missing(res.dir)){res.dir <- paste(root.dir, "/Results", sep="")}
     if(missing(lrg.dir)){lrg.dir <- paste(root.dir, "/Large_Peaks", sep="")}
@@ -110,10 +110,14 @@ function(form, covariates, FDR=0.1, normalization="common", add.norm=TRUE,
         which.sig <- which.sig[order(which.sig$ord),c("Delta","p.value","num.sig")]
         which.sig <- data.frame(which.sig, tmp)
         sigs <- which.sig[apply(which.sig[,-(1:3),drop=FALSE]==1,1,any, na.rm=TRUE),]
-        sigs <- sigs[,c(TRUE,TRUE,TRUE,apply(sigs[,-(1:3),drop=FALSE]==1,2,any,na.rm=TRUE))]
-	if(all(is.na(sigs$Delta))){
-		sigs$Delta <- c()
-	}
+        if(dim(sigs)[1]){
+            sigs <- sigs[,c(TRUE,TRUE,TRUE,apply(sigs[,-(1:3),drop=FALSE]==1,2,any,na.rm=TRUE))]
+            if(all(is.na(sigs$Delta))){
+            	sigs$Delta <- c()
+            }
+        } else {
+            sigs <- sigs[,1:3]
+        }
         min.FDR <- sapply(1:max(num.sig), function(x){
             tmp <- sort(which.sig$p.value[which.sig$num.sig>=x])
             min(length(tmp)*tmp/(1:length(tmp)))

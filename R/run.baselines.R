@@ -1,9 +1,11 @@
 `run.baselines` <-
-function(root.dir = ".", raw.dir, base.dir, overwrite=FALSE, use.par.file = FALSE, 
-        par.file = "parameters.RData", sm.par=1.1E-9, neg.pen=sqrt(pi/2), k.biweight=6, 
-        max.iter=30, frac.changed=0.001){
+function(root.dir = ".", raw.dir, base.dir, overwrite = FALSE, use.par.file = FALSE,
+        par.file = "parameters.RData", sm.par = 1e-11, sm.ord = 2, max.iter = 40, tol = 5e-8,
+        sm.div = NA, sm.norm.by = c("baseline", "overestimate", "constant"),
+        neg.div = NA, neg.norm.by = c("baseline", "overestimate", "constant"),
+        rel.conv.crit = TRUE, zero.rm = TRUE, halve.search = FALSE){
     fail <- 0
-    if(missing(base.dir)){base.dir <- paste(root.dir, "/Baseline_Corrected", sep="")}
+    if(missing(base.dir)){base.dir <- paste(root.dir, "/Baselines", sep="")}
     if(missing(raw.dir)){raw.dir <- paste(root.dir, "/Raw_Data", sep="")}
     if(use.par.file){
         load(paste(root.dir, "/", par.file, sep=""))
@@ -15,15 +17,16 @@ function(root.dir = ".", raw.dir, base.dir, overwrite=FALSE, use.par.file = FALS
         if(!file.exists(paste(base.dir, "/", sub("\\.txt$", ".RData", i), sep="")) || 
                 overwrite){
             if(regexpr(",", readLines(paste(raw.dir, "/", i, sep=""), n=1)) != -1){ 
-                peak.base <- read.csv(paste(raw.dir, "/", i, sep=""), header=FALSE)
+                spect <- read.csv(paste(raw.dir, "/", i, sep=""), header=FALSE)
             } else {
-                peak.base <- read.table(paste(raw.dir, "/", i, sep=""), header=FALSE)
+                spect <- read.table(paste(raw.dir, "/", i, sep=""), header=FALSE)
             }
-            peak.base[,2] <- peak.base[,2] - baseline(peak.base[,2], sm.par, 
-                neg.pen, k.biweight, max.iter, frac.changed)[[1]]
-            names(peak.base) <- c("Freq", "Amp")
-            save(peak.base, file=sub("\\.txt$",".RData", paste(base.dir, "/", i, sep="")))
-            rm(peak.base)
+            spect.base <- baseline(spect[,2], sm.par=sm.par, sm.ord=sm.ord, max.iter=max.iter,
+                tol=tol, neg.div=neg.div, sm.div=sm.div, sm.norm.by=sm.norm.by, neg.norm.by=neg.norm.by,
+                rel.conv.crit=rel.conv.crit, zero.rm=zero.rm, halve.search=halve.search)[[1]]
+            names(spect) <- c("Freq", "Amp")
+            save(spect,spect.base, file=sub("\\.txt$",".RData", paste(base.dir, "/", i, sep="")))
+            rm(spect,spect.base)
         } else {
             fail <- fail + 1
         }

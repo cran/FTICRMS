@@ -1,6 +1,6 @@
 `run.strong.peaks` <-
 function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, root.dir = ".", 
-        lrg.dir, lrg.file = "lrg.peaks.RData", overwrite = FALSE, use.par.file = FALSE, 
+        lrg.dir, lrg.file = "lrg_peaks.RData", overwrite = FALSE, use.par.file = FALSE,
         par.file = "parameters.RData"){
     if(missing(lrg.dir)){lrg.dir <- paste(root.dir, "/Large_Peaks", sep="")}
     if(use.par.file){

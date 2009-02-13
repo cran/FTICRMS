@@ -23,8 +23,8 @@ and the vertex of the corresponding parabola is located.  The coordinates of the
 \code{Center_hat} and \code{Max_hat} in the return value.  The \code{Width_hat} component is the negative 
 reciprocal of the coefficient of the squared term.
 
-If \code{peak.method = "locmax"}, then the algorithm merely returns the set of local maxima, and the 
-\code{Width_hat} component of the return value is \code{NA}.
+If \code{peak.method = "locmax"}, then the algorithm merely returns the set of local maxima larger than
+\code{thresh}, and the \code{Width_hat} component of the return value is \code{NA}.
 }
 \value{
   A data frame with columns
@@ -33,13 +33,22 @@ If \code{peak.method = "locmax"}, then the algorithm merely returns the set of l
   \item{Width_hat}{estimated width of peak}
 }
 \references{
-Barkauskas, D.A. \emph{et al}. (2008) \dQuote{Detecting glycan cancer biomarkers in serum 
-samples using MALDI FT-ICR mass spectrometry data}.  Submitted to \emph{Bioinformatics}
+Barkauskas, D.A. (2009) \dQuote{Statistical Analysis of Matrix-Assisted Laser Desorption/Ionization
+Fourier Transform Ion Cyclotron Resonance Mass Spectrometry Data with Applications to Cancer
+Biomarker Detection}.  Ph.D. dissertation, University of California at Davis.
+
+Barkauskas, D.A. \emph{et al}. (2009) \dQuote{Detecting glycan cancer biomarkers in serum
+samples using MALDI FT-ICR mass spectrometry data}.  \emph{Bioinformatics}, \bold{25}:2, 251--257.
 }
 \author{Don Barkauskas (\email{barkda@wald.ucdavis.edu})}
 \note{An extremely large value for \code{Width_hat} most likely indicates a bad fit.
 
 Using \code{peak.method = "locmax"} will vastly speed up the runtime, but may affect the 
-quality of the analysis.}
+quality of the analysis.
+
+As noted in both papers by Barkauskas, a typical FT-ICR MS spectrum has far more peaks than can be
+accounted for by actual compounds.  Thus, defining a good value of \code{thresh} will vastly speed up the
+computation without materially affecting the analysis.
+}
 \seealso{\code{\link{run.peaks}}}
 \examples{}

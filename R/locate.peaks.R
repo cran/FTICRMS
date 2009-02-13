@@ -1,8 +1,8 @@
 `locate.peaks` <-
-function(peak.base, num.pts=5, R2.thresh = 0.98, oneside.min=1, 
-        peak.method = "parabola", thresh=-Inf){
+function(peak.base, num.pts = 5, R2.thresh = 0.98, oneside.min = 1,
+        peak.method = "parabola", thresh = -Inf){
     loc.max <- .loc.maxes(peak.base[,2])
-    loc.max <- loc.max[peak.base[loc.max,2]>=thresh]    
+    loc.max <- intersect(which(peak.base[,2]>=thresh), loc.max)
     if(peak.method=="parabola"){
         loc.max <- loc.max[loc.max >= oneside.min+1 & loc.max <= length(peak.base[,2])-oneside.min]
         all.peaks <- sapply(loc.max,function(x){
