@@ -1,16 +1,27 @@
 `run.peaks` <-
-function(trans.method = "shiftedlog", add.par = 0, subtract.base = FALSE, root.dir = ".",
-        base.dir, peak.dir, overwrite = FALSE, use.par.file = FALSE,
-        par.file = "parameters.RData", num.pts = 5, R2.thresh = 0.98, oneside.min = 1,
-        peak.method = "parabola", calc.all.peaks = FALSE, gengamma.quantiles = TRUE,
-        peak.thresh = 3.798194){
+function(trans.method = c("shiftedlog", "glog", "none"), add.par = 0, 
+        subtract.base = FALSE, root.dir = ".", base.dir, peak.dir, 
+        overwrite = FALSE, use.par.file = FALSE, par.file = "parameters.RData", 
+        num.pts = 5, R2.thresh = 0.98, oneside.min = 1, 
+        peak.method = c("parabola", "locmaxes"), calc.all.peaks = FALSE, 
+        gengamma.quantiles = TRUE, peak.thresh = 3.798194){
     fail <- 0
     zeros <- 0
     if(missing(base.dir)){base.dir <- paste(root.dir, "/Baselines", sep="")}
     if(missing(peak.dir)){peak.dir <- paste(root.dir, "/All_Peaks", sep="")}
     if(use.par.file){
         load(paste(root.dir, "/", par.file, sep=""))
+        tmp <- match.call()
+        tmp[[1]] <- as.name("list")
+        tmp <- eval(tmp)
+        if(length(tmp) > 0){
+            for(i in 1:length(tmp)){
+                assign(names(tmp)[i],tmp[[i]])
+            }
+        }
     }
+    peak.method <- match.arg(peak.method)
+    trans.method <- match.arg(trans.method)
     if(!file.exists(peak.dir)){
         dir.create(peak.dir)
     }
@@ -64,7 +75,16 @@ function(trans.method = "shiftedlog", add.par = 0, subtract.base = FALSE, root.d
                 }
             } else {
                 if(gengamma.quantiles){
-                    thresh <- log(peak.thresh*spect.base)
+                    if(subtract.base){
+                        spect.base <- 0
+                    }
+                    if(trans.method=="shiftedlog"){
+                        thresh <- log(peak.thresh) + log(spect.base+add.par)
+                    }
+                    if(trans.method=="glog"){
+                        thresh <- log(peak.thresh) +
+                            log((spect.base+sqrt(add.par + spect.base^2))/2)
+                    }
                 } else {
                     thresh <- .biweight.FTICRMS(spect$LogAmp, K=3*peak.thresh/2)
                     thresh <- thresh$center + 3*peak.thresh/2*thresh$scale

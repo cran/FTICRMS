@@ -1,7 +1,7 @@
 `run.baselines` <-
 function(root.dir = ".", raw.dir, base.dir, overwrite = FALSE, use.par.file = FALSE,
-        par.file = "parameters.RData", sm.par = 1e-11, sm.ord = 2, max.iter = 40, tol = 5e-8,
-        sm.div = NA, sm.norm.by = c("baseline", "overestimate", "constant"),
+        par.file = "parameters.RData", sm.par = 1e-11, sm.ord = 2, max.iter = 20,
+        tol = 5e-8, sm.div = NA, sm.norm.by = c("baseline", "overestimate", "constant"),
         neg.div = NA, neg.norm.by = c("baseline", "overestimate", "constant"),
         rel.conv.crit = TRUE, zero.rm = TRUE, halve.search = FALSE){
     fail <- 0
@@ -9,7 +9,17 @@ function(root.dir = ".", raw.dir, base.dir, overwrite = FALSE, use.par.file = FA
     if(missing(raw.dir)){raw.dir <- paste(root.dir, "/Raw_Data", sep="")}
     if(use.par.file){
         load(paste(root.dir, "/", par.file, sep=""))
+        tmp <- match.call()
+        tmp[[1]] <- as.name("list")
+        tmp <- eval(tmp)
+        if(length(tmp) > 0){
+            for(i in 1:length(tmp)){
+                assign(names(tmp)[i],tmp[[i]])
+            }
+        }
     }
+    neg.norm.by <- match.arg(neg.norm.by)
+    sm.norm.by <- match.arg(sm.norm.by)
     if(!file.exists(base.dir)){
         dir.create(base.dir)
     }

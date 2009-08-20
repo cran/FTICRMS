@@ -1,22 +1,39 @@
 `run.strong.peaks` <-
-function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, root.dir = ".", 
-        lrg.dir, lrg.file = "lrg_peaks.RData", overwrite = FALSE, use.par.file = FALSE,
-        par.file = "parameters.RData"){
+function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, 
+        align.method = c("PL", "spline", "affine", "none"), align.fcn = NA,
+        root.dir = ".", lrg.dir, lrg.file = "lrg_peaks.RData",
+        overwrite = FALSE, use.par.file = FALSE, par.file = "parameters.RData"){
     if(missing(lrg.dir)){lrg.dir <- paste(root.dir, "/Large_Peaks", sep="")}
     if(use.par.file){
         load(paste(root.dir, "/", par.file, sep=""))
+        tmp <- match.call()
+        tmp[[1]] <- as.name("list")
+        tmp <- eval(tmp)
+        if(length(tmp) > 0){
+            for(i in 1:length(tmp)){
+                assign(names(tmp)[i],tmp[[i]])
+            }
+        }
     }
+    align.method <- match.arg(align.method)
     load(paste(lrg.dir, "/", lrg.file, sep=""))
     if(!exists("amps") || overwrite){
         if(!identical(pre.align, FALSE)){
-            if(class(pre.align)!="list"){
-                pre.align <- list(targets=0, actual=data.frame(-pre.align))
+            if(!identical(class(pre.align),"list")){
+                pre.align <- list(targets=median(lrg.peaks$Center_hat),
+                    actual=data.frame(median(lrg.peaks$Center_hat)-pre.align),
+                    align.method=align.method)
                 if(use.par.file){
                     tmp <- extract.pars(par.file, root.dir)
                     tmp$pre.align <- pre.align
                     do.call(make.par.file, tmp)
                     load(paste(root.dir, "/", par.file, sep=""))
                 }
+            }
+            if(!is.na(align.fcn)){
+                pre.align$targets <- align.fcn$fcn(pre.align$targets)
+                pre.align$actual <- align.fcn$fcn(pre.align$actual)
+                lrg.peaks$Center_hat <- align.fcn$fcn(lrg.peaks$Center_hat)
             }
             pre.spl <- do.call(.alignment, pre.align)
             for(i in levels(lrg.peaks$File)){
@@ -27,6 +44,9 @@ function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, root.dir = ".",
                     lrg.peaks$Center_hat[lrg.peaks$File==i] <- predict(pre.spl[[i]], 
                         lrg.peaks$Center_hat[lrg.peaks$File==i])$y
                 }
+            }
+            if(!is.na(align.fcn)){
+                lrg.peaks$Center_hat <- align.fcn$inv(lrg.peaks$Center_hat)
             }
         }
         lrg.peaks <- lrg.peaks[order(lrg.peaks$Center_hat),]
@@ -49,7 +69,7 @@ function(cor.thresh = 0.8, isotope.dist = 7, pre.align = FALSE, root.dir = ".",
             colnames(amps) <- colnames(centers)
             rownames(amps) <- levels(lrg.peaks$File)
             if(length(strong)>1){
-                keep <- c(1,which(diff(strong)!=1)+1 ,dim(centers)[2]+1)
+                keep <- c(1,which(diff(strong)!=1)+1, dim(centers)[2]+1)
                 for(i in 1:(length(keep)-1)){
                     keep[i] <- keep[i]-1+which.min(apply(centers[,keep[i]:(keep[i+1]-1),drop=FALSE],
                         2,function(x){diff(range(x))}))

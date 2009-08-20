@@ -1,25 +1,24 @@
 `.alignment` <-
-function(targets, actual){
-    require(splines)
+function(targets, actual, align.method="spline"){
+    if(align.method == "spline"){
+        require(splines)
+    }
     ret <- list()
     for(x in 1:dim(actual)[1]){
         acts <- as.numeric(actual[x,!is.na(actual[x,])])
         targs <- as.numeric(targets[!is.na(actual[x,])])
         pts <- length(acts)
-        if(pts <= 3){
-            fr <- switch(pts+1,
-                data.frame(Y=1:2, X=1:2),
-                data.frame(Y=1:2+targs, X=1:2+acts),
-                data.frame(Y=targs, X=acts),
-                data.frame(Y=targs, X=acts)
-            )
-            if(pts <= 2){
-                ret[[x]] <- lm(Y~X, dat=fr)
-            } else {
-                form <- Y ~ X + I(sapply(X-K, function(x)max(c(x,0))))
-                form <- as.formula(sub("K", acts[2], deparse(form)))
-                ret[[x]] <- lm(form, dat=fr)             
-            }
+        fr <- switch(as.character(pts),
+            "0" = data.frame(Y=1:2, X=1:2),
+            "1" = data.frame(Y=1:2+targs, X=1:2+acts),
+            data.frame(Y=targs, X=acts)
+        )
+        if(pts <= 2 || align.method == "affine"){
+            ret[[x]] <- lm(Y~X, dat=fr)
+        } else if (pts == 3 || align.method == "PL") {
+            form <- paste("Y ~ X + ", paste("I(pmax(X-", acts[2:(pts-1)], ", 0))",
+                collapse=" + ", sep=""), sep="")
+            ret[[x]] <- lm(as.formula(form), dat=fr)
         } else {
             ret[[x]] <- interpSpline(acts, targs)        
         }
@@ -132,7 +131,7 @@ function(peaks, clust.method="ppm", clust.constant=10){
     by(tmp,clust,function(x){x})
 }
 
-`.get.sp.masses` <- 
+`.get.sp.masses` <-
 function(all.masses, sp.masses, iso.dist, inds=TRUE){
     isos <- sort(as.numeric(outer((0:iso.dist)*1.003, sp.masses, "+")))
     ends <- as.numeric(outer(c(-.02,.02), isos, "+"))
@@ -174,7 +173,7 @@ function(pts, num.pts, R2.thresh){
         return(c(mean(pts[locs,1])-coeffs[2]/2/coeffs[3], coeffs[1]-coeffs[2]^2/4/coeffs[3],
             -1/coeffs[3]))
     } else {
-        return(data.frame(rep(0,3)))
+        return(rep(0,3))
     }
 }
 

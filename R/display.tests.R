@@ -1,5 +1,6 @@
 `display.tests` <-
-function (sig.rows = "all", summ = anova, tests, form = parameter.list$form){
+function (sig.rows = "all", summ = "anova", tests, form = parameter.list$form,
+        use.model = parameter.list$use.model, ...){
     if (missing(tests)) {
         if (identical(sig.rows, "all")) {
             sig.rows <- 1:dim(sigs)[1]
@@ -10,12 +11,18 @@ function (sig.rows = "all", summ = anova, tests, form = parameter.list$form){
             warning("Nonexistent row requested from clust.mat")
         }
     }
+    if(class(use.model)=="character"){
+        use.model <- get(use.model)
+    }
     ret <- lapply(tests, function(x) {
         dat <- data.frame(Y=t(clust.mat[x,,drop=FALSE]), unique(parameter.list$covariates))
         colnames(dat)[1] <- "Y"
-        lm(form, dat)
+        use.model(form, dat, ...)
     })
     if(!identical(summ,"none")){
+        if(class(summ)=="character"){
+            summ <- get(summ)
+        }
         ret <- lapply(ret, summ)
     }
     names(ret) <- rownames(clust.mat)[tests]
